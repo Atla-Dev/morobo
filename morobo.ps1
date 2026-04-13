@@ -18,11 +18,14 @@ param(
 # --- Config --- #
 $destination = "E:\logs"
 $logPath = "E:\logs" # Ensure this folder exists before running
+$config = Import-PowerShellDataFile -Path '.\.env'
 
 # --- Email Config --- #
 
-$username = "email account here"
-$appPassword = "app-pass-goes-here"
+$username = $config.Username
+$senderEmail = $config.sEmail
+$recipientEmail = $config.rEmail
+$appPassword = $config.Password
 $secPassword = ConvertTo-SecureString $appPassword -AsPlainText -Force
 $creds = New-Object System.Management.Automation.PSCredential($username, $secPassword)
 
@@ -33,8 +36,8 @@ Timestamp: $(Get-Date)
 "@
 
 $sendMailMessageSplat =@{
-    From = "Sender email"
-    To = "Recipient email"
+    From = $senderEmail
+    To = $recipientEmail
     Subject = "MoRobo Copy Complete"
     Body = $emailBody
     smtpServer = "smtp.gmail.com"
@@ -53,29 +56,6 @@ if($Mass) {
     Write-Host "If you change your mind press Ctrl+C now..." -ForegroundColor Cyan
     Start-Sleep -Seconds 10
 
-    Write-Host "Calculating size of source files... " -ForegroundColor Cyan
-    Start-Sleep -Seconds 5
-    # Calculate total size of source files (in bytes)
-    $totalSize = 0
-    foreach ($src in $sources) {
-        if (Test-Path $src) {
-            $totalSize += (Get-ChildItem -Path $src -Recurse -File | Measure-Object -Property Length -Sum).Sum
-        }
-    }
-    Write-Host "Getting destination drive letter... " -ForegroundColor Cyan
-    Start-Sleep -Seconds 5
-    # Get destination drive letter
-    $destDrive = ($destination -replace '^([A-Za-z]):.*','$1') + ':'
-    $freeSpace = (Get-PSDrive $destDrive).Free
-
-    if ($freeSpace -lt $totalSize) {
-        Write-Host "WARNING: Not enough disk space on $destDrive. Required: $($totalSize/1GB) GB, Available: $($freeSpace/1GB) GB" -ForegroundColor Red
-        # Optionally: exit the script
-        # exit 1
-    } else {
-        Write-Host "Sufficient disk space detected." -ForegroundColor Green
-    }
-
     # Define your specific Mappings here (Source = Destination)
     $copyJobs = @{
         "\\NAS\path\to\source\folder1" = "E:\path\to\destination\folder1"
@@ -84,6 +64,43 @@ if($Mass) {
         "\\NAS\path\to\source\folder4" = "E:\path\to\destination\folder4"
         "\\NAS\path\to\source\folder5" = "E:\path\to\destination\folder5"
     }
+    Write-Host "Calculating size of source files... " -ForegroundColor Cyan
+    Start-Sleep -Seconds 5
+    # Calculate total size of source files (in bytes)
+    $totalSize = 0
+    foreach ($src in $copyJobs.Keys) {
+        if (Test-Path $src) {
+            $totalSize += (Get-ChildItem -Path $src -Recurse -File | Measure-Object -Property Length -Sum).Sum
+        }
+    }
+    
+    Write-Host "Getting destination drive letter... " -ForegroundColor Cyan
+    Start-Sleep -Seconds 5
+    # Get destination drive letter
+    $firstDest = $copyJobs.Values | Select-Object -First 1
+    Write-Host "Destination: $firstDest"
+    $destDrive = ($firstDest -replace '^([A-Za-z]):.*','$1')
+    Write-Host "Extracted drive: $destDrive"
+    Get-PSDrive -Name $destDrive
+    
+
+    $freeSpace = (Get-PSDrive $destDrive).Free
+
+    if ($freeSpace -lt $totalSize) {
+        Write-Host "WARNING: Not enough disk space on $destDrive. Required: $($totalSize/1GB) GB, Available: $($freeSpace/1GB) GB" -ForegroundColor Red
+        # Optionally: exit the script
+        # exit 1
+    } else {
+        Write-Host "Sufficient disk space detected." -ForegroundColor Green
+        $confirmation = Read-Host "Continue with copy? (Y/N)" -ForegroundColor Cyan
+        if ($confirmation -notin @('Y','y')) {
+            Write-Host "Operation cancelled by user." -ForegroundColor Yellow
+            exit 0
+        }
+    }
+
+    
+
         foreach ($src in $copyJobs.Keys) {
         $dest = $copyJobs[$src]
         $myArgs = @($src, $dest, "/S", "/R:5", "/W:5", "/Z", "/TEE", "/LOG+:$dest\morobolog.txt")
@@ -96,23 +113,27 @@ elseif ($Solo) {
     Write-Host "If you change your mind press Ctrl+C now..." -ForegroundColor Yellow
     Start-Sleep -Seconds 10
 
-    # Put the folders you want to copy here, if device is on the network use \\hostname\path\to\destinationfolder\
+    # Put the folders you want to copy here, if device is on the network use \\hostname\path\to\destination\folder\
     $sources = "C:\folder1","C:\folder2","C:\folder3"
     
-    Write-Host "Calculating size of source files... " -ForegroundColor Yellow
+    Write-Host "Calculating size of source files... " -ForegroundColor Cyan
     Start-Sleep -Seconds 5
     # Calculate total size of source files (in bytes)
     $totalSize = 0
-    foreach ($src in $sources) {
+    foreach ($src in $copyJobs.Keys) {
         if (Test-Path $src) {
             $totalSize += (Get-ChildItem -Path $src -Recurse -File | Measure-Object -Property Length -Sum).Sum
         }
     }
+
     Write-Host "Getting destination drive letter... " -ForegroundColor Yellow
     Start-Sleep -Seconds 5
     # Get destination drive letter
-    $destDrive = ($destination -replace '^([A-Za-z]):.*','$1') + ':'
-    $freeSpace = (Get-PSDrive $destDrive).Free
+    $firstDest = $copyJobs.Values | Select-Object -First 1
+    Write-Host "Destination: $firstDest"
+    $destDrive = ($firstDest -replace '^([A-Za-z]):.*','$1')
+    Write-Host "Extracted drive: $destDrive"
+    Get-PSDrive -Name $destDrive
 
     if ($freeSpace -lt $totalSize) {
         Write-Host "WARNING: Not enough disk space on $destDrive. Required: $($totalSize/1GB) GB, Available: $($freeSpace/1GB) GB" -ForegroundColor Red
@@ -120,6 +141,11 @@ elseif ($Solo) {
         # exit 1
     } else {
         Write-Host "Sufficient disk space detected." -ForegroundColor Green
+        $confirmation = Read-Host "Continue with copy? (Y/N)" -ForegroundColor Yellow
+        if ($confirmation -notin @('Y','y')) {
+            Write-Host "Operation cancelled by user." -ForegroundColor Yellow
+            exit 0
+        }
     }
 
     # Change the switches to suit your preference /S copies all directories but ignores empty ones /R:5 retries 5 times /W:5 waits 5 seconds between retries /Z restartable after a network issue
