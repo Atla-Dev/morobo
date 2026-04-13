@@ -89,7 +89,7 @@ if($Mass) {
     if ($freeSpace -lt $totalSize) {
         Write-Host "WARNING: Not enough disk space on $destDrive. Required: $($totalSize/1GB) GB, Available: $($freeSpace/1GB) GB" -ForegroundColor Red
         # Optionally: exit the script
-        # exit 1
+         exit 1
     } else {
         Write-Host "Sufficient disk space detected." -ForegroundColor Green
         $confirmation = Read-Host "Continue with copy? (Y/N)" -ForegroundColor Cyan
