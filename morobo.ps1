@@ -5,13 +5,14 @@
 #===============================================================#
 
 param(
-    [switch]$Mass
+    [switch]$Mass,
+    [switch]$Solo
 )
 
 
 # --- Config --- #
 $destination = "\\path\to\destination\folder\"
-$logPath="E:\logs"
+$logPath="E:\logs" # Ensure this folder exists
 
 if($Mass) {
     Write-Host "Running in mass destination mode..." -ForegroundColor Cyan
@@ -27,10 +28,11 @@ if($Mass) {
     }
         foreach ($src in $copyJobs.Keys) {
         $dest = $copyJobs[$src]
-        robocopy $src $dest /S /R:5 /W:5 /Z /TEE /LOG+:"$logPath\morobolog.txt"
+        $myArgs = @($src, $dest, "/S", "/R:5", "/W:5", "/Z", "/TEE", "/LOG+:$dest\morobolog.txt")
+        robocopy @myArgs
     }
 }
-else {
+elseif ($Solo) {
     Write-Host "Running Standard Copy Mode..." -ForegroundColor Yellow
     Start-Sleep -Seconds 5
 
@@ -39,6 +41,10 @@ else {
 
     # Change the switches to suit your preference /S copies all directories but ignores empty ones /R:5 retries 5 times /W:5 waits 5 seconds between retries /Z restartable after a network issue
     foreach( $src in $sources ) {
-    robocopy $src $destination /S /R:5 /W:5 /Z /LOG+:"$logPath/morobolog.txt" /TEE
+    $myArgs = @($src, $destination, "/S", "/R:5", "/W:5", "/Z", "/TEE", "/LOG+:$logPath\morobolog.txt")
+    robocopy @myArgs
     }
+}
+else {
+    Write-Host "No switch detected. Use -Mass or -Solo." -ForegroundColor Red
 }
