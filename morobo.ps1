@@ -1,5 +1,5 @@
 #################################################################
-# Name: Morobo                                                  #
+# Name: MoRobo                                                  #
 # Description: This script copies multiple files via robocopy   #
 # Author: Atla-Dev                                              #
 # Version: 1.1                                                  #
@@ -19,6 +19,8 @@ $logPath = "E:\logs" # Ensure this folder exists before running
 if($Mass) {
     Write-Host "Running in mass destination mode..." -ForegroundColor Cyan
     Start-Sleep -Seconds 5
+    Write-Host "If you change your mind press Ctrl+C now..."
+    Start-Sleep -Seconds 10
 
     # Define your specific Mappings here (Source = Destination)
     $copyJobs = @{
@@ -37,8 +39,10 @@ if($Mass) {
 elseif ($Solo) {
     Write-Host "Running Standard Copy Mode..." -ForegroundColor Yellow
     Start-Sleep -Seconds 5
+    Write-Host "If you change your mind press Ctrl+C now..."
+    Start-Sleep -Seconds 10
 
-    # Put the folders you want to copy here, if device is on the network use \\assetnumber\path\to\destinationfolder\
+    # Put the folders you want to copy here, if device is on the network use \\hostname\path\to\destinationfolder\
     $sources = "C:\folder1","C:\folder2","C:\folder3"
 
     # Change the switches to suit your preference /S copies all directories but ignores empty ones /R:5 retries 5 times /W:5 waits 5 seconds between retries /Z restartable after a network issue
