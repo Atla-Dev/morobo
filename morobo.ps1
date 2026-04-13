@@ -1,8 +1,10 @@
-#===============================================================#
-# Script: Morobo                                                #
-# Written: Atla-Dev                                             #
+#################################################################
+# Name: Morobo                                                  #
 # Description: This script copies multiple files via robocopy   #
-#===============================================================#
+# Author: Atla-Dev                                              #
+# Version: 1.1                                                  #
+# Creation Date: 13/04/2026                                     #
+#################################################################
 
 param(
     [switch]$Mass,
@@ -12,7 +14,7 @@ param(
 
 # --- Config --- #
 $destination = "\\path\to\destination\folder\"
-$logPath="E:\logs" # Ensure this folder exists
+$logPath = "E:\logs" # Ensure this folder exists before running
 
 if($Mass) {
     Write-Host "Running in mass destination mode..." -ForegroundColor Cyan
