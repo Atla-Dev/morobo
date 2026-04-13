@@ -2,7 +2,7 @@
 # Name: MoRobo                                                  #
 # Description: This script copies multiple files via robocopy   #
 # Author: Atla-Dev                                              #
-# Version: 1.1                                                  #
+# Version: 1.4                                                  #
 # Creation Date: 13/04/2026                                     #
 #################################################################
 
@@ -71,7 +71,7 @@ if($Mass) {
     if ($freeSpace -lt $totalSize) {
         Write-Host "WARNING: Not enough disk space on $destDrive. Required: $($totalSize/1GB) GB, Available: $($freeSpace/1GB) GB" -ForegroundColor Red
         # Optionally: exit the script
-        # exit 1
+         exit 1
     } else {
         Write-Host "Sufficient disk space detected." -ForegroundColor Green
     }
