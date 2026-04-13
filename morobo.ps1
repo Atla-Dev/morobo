@@ -11,9 +11,11 @@ param(
 
 # --- Config --- #
 $destination = "\\path\to\destination\folder\"
+$logPath="E:\logs"
 
 if($Mass) {
     Write-Host "Running in mass destination mode..." -ForegroundColor Cyan
+    Start-Sleep -Seconds 5
 
     # Define your specific Mappings here (Source = Destination)
     $copyJobs = @{
@@ -25,12 +27,12 @@ if($Mass) {
     }
         foreach ($src in $copyJobs.Keys) {
         $dest = $copyJobs[$src]
-        $logPath="E:\logs"
         robocopy $src $dest /S /R:5 /W:5 /Z /TEE /LOG+:"$logPath\morobolog.txt"
     }
 }
 else {
     Write-Host "Running Standard Copy Mode..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 5
 
     # Put the folders you want to copy here, if device is on the network use \\assetnumber\path\to\destinationfolder\
     $sources = "C:\folder1","C:\folder2","C:\folder3"
